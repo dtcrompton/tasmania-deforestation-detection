@@ -101,11 +101,11 @@ axes[1].set_ylabel("Number of loss points")
 axes[1].tick_params(axis="x", rotation=0)
 
 plt.tight_layout()
-out_path = OUTPUTS / "spatial_sanity_check.png"
+out_path = OUTPUTS / "figures" / "spatial_sanity_check.png"
 plt.savefig(out_path, dpi=300, bbox_inches="tight")
 print(f"\nPlot saved to {out_path}")
 
 # --- Save classified points ---
-out_geojson = OUTPUTS / "loss_points_classified.geojson"
+out_geojson = OUTPUTS / "maps" / "loss_points_classified.geojson"
 loss.to_file(out_geojson, driver="GeoJSON")
 print(f"Classified points saved to {out_geojson}")
