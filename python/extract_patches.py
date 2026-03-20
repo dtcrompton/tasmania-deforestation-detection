@@ -114,27 +114,27 @@ def extract_patch(tile_path, lon, lat, point_id, year, output_dir):
         return output_path
 
 def main():
-    """Extract all patches from mosaic tiles."""
+    """Extract all patches from annual composite GeoTIFFs."""
     
-    # Load filtered loss points
-    df = pd.read_csv('data/processed/loss_points_filtered.csv')
-    print(f"Loaded {len(df)} loss points")
+    # Load study region loss points
+    df = pd.read_csv('data/processed/loss_points_study_region.csv')
+    print(f"Loaded {len(df)} loss points (study region)")
     
     # Create output directory
     output_dir = 'data/training/patches'
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     
-    # Build dictionary of tiles grouped by year
-    all_tiles = sorted(glob.glob('data/raw/*.tif'))
-    tiles_dict = {}
-    for tile_path in all_tiles:
-        # Extract year from filename (e.g., sentinel2_patches_2019-...)
-        year = int(tile_path.split('_')[-1].split('-')[0])
-        if year not in tiles_dict:
-            tiles_dict[year] = []
-        tiles_dict[year].append(tile_path)
-    
-    print(f"Found tiles for years: {sorted(tiles_dict.keys())}")
+    # Build dictionary of composites by year (handling tiled exports)
+    composite_files = {}
+    for year in range(2019, 2025):
+        pattern = f'data/raw/sentinel2_study_region_{year}*.tif'
+        tiles = sorted(glob.glob(pattern))
+        if tiles:
+            composite_files[year] = tiles
+            print(f"Year {year}: found {len(tiles)} tiles")
+        else:
+            print(f"Warning: No tiles found for year {year}")
+    print(f"Found composites for years: {sorted(composite_files.keys())}")
     
     # Extract patches
     successful = 0
@@ -142,11 +142,20 @@ def main():
     
     for idx, row in df.iterrows():
         point_id = int(row['id'])
-        year = 2000 + int(row['lossyear'])  # Convert 19 -> 2019
+        year = 2000 + int(row['lossyear'])
         lon = row['longitude']
         lat = row['latitude']
         
+# Get the tiles for this year
+        year_tiles = composite_files.get(year)
+        
+        if year_tiles is None:
+            print(f"Warning: No tiles found for year {year}, skipping point {point_id}")
+            failed += 1
+            continue
+        
         # Find which tile contains this point
+        tiles_dict = {year: year_tiles}
         tile_path = find_tile_for_point(lon, lat, year, tiles_dict)
         
         if tile_path is None:
