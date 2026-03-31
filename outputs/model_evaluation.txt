@@ -1,0 +1,33 @@
+PHASE 3: CNN CLEARCUT CLASSIFIER - TEST SET EVALUATION
+ =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  = 
+
+Dataset:
+  Total samples: 263
+  Clearcut: 24 (9.1%)
+  Not-clearcut: 239 (90.9%)
+
+Train/Val/Test Split:
+  Train: 184 samples
+  Val:   39 samples
+  Test:  40 samples
+
+Test Set Metrics:
+  Precision (clearcut): 1.000
+  Recall (clearcut):    1.000
+  F1-score:             1.000
+
+Confusion Matrix:
+                  Predicted
+                  Not-Clear  Clearcut
+Actual Not-Clear         36         0
+       Clearcut           0         4
+
+Classification Report:
+              precision    recall  f1-score   support
+
+Not-Clearcut       1.00      1.00      1.00        36
+    Clearcut       1.00      1.00      1.00         4
+
+    accuracy                           1.00        40
+   macro avg       1.00      1.00      1.00        40
+weighted avg       1.00      1.00      1.00        40
