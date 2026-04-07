@@ -1,145 +1,253 @@
 # Tasmania Deforestation Detection
 
-**Deep learning computer vision system for detecting undocumented forest clearing in Tasmania's old-growth forests using Sentinel-2 satellite imagery (2019-2025)**
+CNN-based classification of forest loss in central Tasmania (2019–2024) using Sentinel-2 satellite imagery, with spatial analysis to identify patterns and flag potential violations in protected areas.
+
+**Live Project:** [dtcrompton.github.io/tasmania-deforestation](https://dtcrompton.github.io/tasmania-deforestation/)  
+**Interactive Map:** [View Map](https://dtcrompton.github.io/tasmania-deforestation/map.html)
+
+---
+
+## Key Findings
+
+- **3.5% of forest loss was clearcut logging** — the remainder predominantly fire-driven (2019/2023 bushfire seasons)
+- **2024 spike:** 37% clearcut rate in 2024 (vs <2% in fire-heavy years), indicating recent logging activity increase
+- **96% of predicted clearcuts fall within PTPZ** (Private Timber Reserve Zones where logging is permitted)
+- **1 clearcut flagged in protected reserves** (outside permitted zones)
+
+**Implication:** Fire management, not logging enforcement, should be the priority for forest protection in central Tasmania.
+
+---
 
 ## Project Overview
 
-This project uses convolutional neural networks (CNNs) to identify potential illegal logging in Tasmania's protected forests by comparing satellite imagery over time and cross-referencing with official forest clearing permits.
+### Study Region
+Central Tasmania: 145.5–146.5°E, -43.2 to -42.2°S  
+Imagery: Sentinel-2 Level-2A (10m resolution, 2019–2024)  
+Loss detection: Hansen Global Forest Change v1.12
 
-**Research Questions:**
-1. Can deep learning detect forest clearing events in satellite imagery with >90% accuracy?
-2. Which areas show forest loss without corresponding government clearing permits?
-3. What is the spatial distribution of suspected illegal deforestation (2019-2025)?
-4. How much undocumented forest clearing has occurred in protected areas?
+### Technical Approach
 
-**Why Tasmania:**
-- High-value old-growth forests (global conservation significance)
-- Well-documented illegal logging controversies
-- Clear distinction between permitted (plantations, sustainable forestry) and illegal clearing
-- Manageable geographic scale for proof-of-concept
-- Strong validation data (government permits, NGO reports, investigative journalism)
+**Phase 1:** Data acquisition via Google Earth Engine  
+- Exported 12 Sentinel-2 composite GeoTIFFs (2 per year, 2019–2024)
+- Sampled 747 Hansen forest loss points within study region
+- Downloaded PTPZ and reserve boundaries (Tasmania LIST)
 
-## Study Area
+**Phase 2:** Manual labelling and patch extraction  
+- Extracted 736 patches (128×128 pixels, 5 bands: RGB + NIR + SWIR1)
+- Manually labelled 315-patch stratified sample via Jupyter notebook
+- Binary classification: clearcut vs not-clearcut (fire/natural)
+- Final distribution: 24 clearcut, 239 not-clearcut, 52 skip (ambiguous)
 
-**Tasmania, Australia** — focusing on:
-- **Tasmanian Wilderness World Heritage Area** (1.58 million hectares)
-- **Regional Forest Agreement areas** (where logging permits are issued)
-- **Known illegal logging hotspots** (from NGO reports: Bob Brown Foundation, Wilderness Society)
+**Phase 3:** CNN training  
+- Architecture: Simple 3-layer CNN (32→64→128 filters) to avoid overfitting
+- Handled 10:1 class imbalance via balanced class weighting
+- Train/val/test split: 70/15/15 (stratified)
+- Test metrics: 100% recall (4/4 clearcut samples), 100% precision
+- Validation: 83% precision on 12 manually-reviewed high-confidence predictions
 
-## Data Sources
+**Phase 4:** Inference and spatial analysis  
+- Applied model to all 736 patches
+- Spatial join with PTPZ and reserve boundaries (GeoPandas)
+- Flagged clearcuts outside permitted zones
+- Generated validation sample (60 patches) for manual review
 
-### **Satellite Imagery:**
-- **Sentinel-2** (10m resolution, free, 2019-2025 coverage)
-- Bands: RGB + NIR for vegetation indices
-- Cloud-free composites (annual or seasonal)
+**Phase 5:** Interactive mapping and portfolio  
+- Built Folium map with clickable markers, layer controls, land tenure overlays
+- Created project pages with technical write-up and stakeholder explainer
+- Published to portfolio site
 
-### **Validation Data:**
-- **Forest clearing permits:** Tasmanian Government (Sustainable Timber Tasmania)
-- **Protected area boundaries:** CAPAD (Collaborative Australian Protected Area Database)
-- **Ground truth:** Investigative reports, media coverage, NGO documentation
-- **Historical logging:** Known illegal clearing sites for training data
+---
 
-### **Forest Baselines:**
-- **Hansen Global Forest Change** (2000-2024 forest cover)
-- **Tasmania vegetation mapping** (old-growth vs. plantation vs. regrowth)
+## Repository Structure
 
-## Methodology
+tasmania-deforestation-detection/
+├── data/
+│   ├── raw/                              # Sentinel-2 GeoTIFFs (gitignored, ~18GB)
+│   ├── processed/
+│   │   ├── loss_points_study_region.csv  # 747 Hansen loss points
+│   │   └── labelling_subset_final.csv    # 315-patch stratified sample
+│   ├── training/
+│   │   ├── patches/                      # 736 GeoTIFF patches (gitignored)
+│   │   └── patch_labels.csv              # 315 manual labels
+│   └── permits/
+│       ├── ptpz.geojson                  # PTPZ boundaries (gitignored)
+│       └── reserve_estate.geojson        # Reserve boundaries (gitignored)
+├── gee/
+│   └── export_sentinel2_composites.js    # GEE script for data export
+├── models/
+│   ├── clearcut_classifier_final.keras   # Trained CNN
+│   └── clearcut_classifier_best.keras    # Best checkpoint
+├── outputs/
+│   ├── figures/
+│   │   ├── training_history.png          # Loss/accuracy curves
+│   │   ├── confusion_matrix.png          # Test set confusion matrix
+│   │   ├── prediction_distribution.png   # Clearcut vs not-clearcut counts
+│   │   ├── clearcut_by_tenure.png        # Clearcuts by land category
+│   │   └── predictions_by_year.png       # Temporal distribution + 2024 spike
+│   ├── maps/
+│   │   ├── predictions.csv               # All predictions with coordinates
+│   │   ├── predictions.geojson           # Predictions as GeoJSON
+│   │   ├── predictions_with_tenure.geojson # With PTPZ/reserve flags
+│   │   └── tasmania_deforestation_map.html # Interactive Folium map
+│   ├── model_evaluation.txt              # Test set metrics
+│   ├── validation_results.csv            # Manual validation (60 patches)
+│   └── validation_metrics.txt            # Validation precision/recall
+└── python/
+├── train_cnn.py                      # Phase 3: CNN training
+├── run_inference.py                  # Phase 4: Inference + tenure cross-ref
+├── validate_predictions.py           # Phase 4: Interactive validation tool
+├── create_visualisations.py          # Phase 4: Charts (styled to portfolio palette)
+├── create_map.py                     # Phase 5: Folium map generation
+├── extract_patches.py                # Phase 2: Patch extraction
+├── filter_loss_points.py             # Phase 1: Hansen point filtering
+└── download_boundaries.py            # Phase 1: PTPZ/reserve download
 
-### Phase 1: Data Collection & Preprocessing
-- [ ] Download Sentinel-2 imagery (2019-2025) for Tasmania
-- [ ] Obtain forest clearing permit records
-- [ ] Map protected area boundaries
-- [ ] Create cloud-free annual composites
+---
 
-### Phase 2: Training Data Creation
-- [ ] Identify known legal clearing sites (permitted logging)
-- [ ] Identify known illegal clearing sites (documented cases)
-- [ ] Extract image patches (before/after pairs)
-- [ ] Label dataset: legal, illegal, no change, natural (fire/storm)
+## Technical Stack
 
-### Phase 3: Model Development
-- [ ] Build CNN for binary classification (forest loss vs. no change)
-- [ ] Train change detection model (U-Net or similar)
-- [ ] Evaluate performance (accuracy, precision, recall)
-- [ ] Fine-tune on Tasmania-specific features
+**Languages & Frameworks:**  
+Python 3.13, TensorFlow/Keras, GeoPandas, Rasterio, Folium
 
-### Phase 4: Inference & Analysis
-- [ ] Run model on entire Tasmania (2019-2025)
-- [ ] Identify forest loss pixels
-- [ ] Cross-reference with permit database
-- [ ] Flag areas: loss detected + no permit = suspected illegal
+**Data Sources:**  
+- Sentinel-2 Level-2A (ESA Copernicus, via Google Earth Engine)
+- Hansen Global Forest Change v1.12 (University of Maryland)
+- Tasmania LIST (PTPZ, Reserve Estate boundaries)
 
-### Phase 5: Validation & Spatial Analysis
-- [ ] Ground-truth with Google Earth historical imagery
-- [ ] Compare to NGO reports and media investigations
-- [ ] Calculate area of suspected illegal clearing
-- [ ] Map spatial distribution and hotspots
+**Key Libraries:**  
+- `tensorflow` — CNN training and inference
+- `geopandas` — spatial joins, CRS transformations
+- `rasterio` — GeoTIFF I/O
+- `folium` — interactive web mapping
+- `scikit-learn` — train/test splitting, class weights, metrics
+- `matplotlib`, `seaborn` — visualisations
 
-### Phase 6: Outputs & Reporting
-- [ ] Interactive map of suspected illegal clearing sites
-- [ ] Time-lapse animation (2019-2025 forest change)
-- [ ] Technical report with model performance metrics
-- [ ] Policy brief for environmental enforcement agencies
-- [ ] Portfolio write-up
+---
 
-## Expected Outputs
+## Reproduction Instructions
 
-**Model:**
-- Trained CNN for forest change detection
-- Performance metrics (accuracy, F1-score, confusion matrix)
-- Model weights and architecture documentation
+### Prerequisites
+- Python 3.13+
+- Google Earth Engine account (for Phase 1 data export)
+- ~20GB disk space for Sentinel-2 imagery
 
-**Geospatial Analysis:**
-- Hectares of forest loss (2019-2025)
-- Hectares with permits vs. without
-- Spatial hotspots of suspected illegal clearing
+### Setup
+```bash
+# Clone repository
+git clone https://github.com/dtcrompton/tasmania-deforestation-detection.git
+cd tasmania-deforestation-detection
 
-**Visualisations:**
-- Interactive map (Folium): suspected sites with satellite imagery overlays
-- Time-series animation (GIF/video): forest change over time
-- Before/after image comparisons for key sites
+# Install dependencies
+pip install tensorflow keras geopandas rasterio folium scikit-learn matplotlib seaborn pandas numpy --break-system-packages
+```
 
-**Reports:**
-- Technical write-up (methodology, results, limitations)
-- Policy brief (1-page summary for enforcement agencies)
-- Portfolio page with embedded map and findings
+### Phase 1: Data Acquisition
+```bash
+# Download PTPZ and reserve boundaries
+python3 python/download_boundaries.py
 
-## Technologies
+# Export Sentinel-2 composites from Google Earth Engine
+# Run gee/export_sentinel2_composites.js in GEE Code Editor
+# Download exported GeoTIFFs to data/raw/
+```
 
-**Satellite Data:** Google Earth Engine, Sentinel Hub  
-**Deep Learning:** TensorFlow/Keras or PyTorch  
-**Image Processing:** Rasterio, GDAL, scikit-image  
-**Geospatial:** GeoPandas, Folium, QGIS  
-**Visualisation:** matplotlib, seaborn, Plotly  
+### Phase 2: Patch Extraction and Labelling
+```bash
+# Extract 128×128 patches from Sentinel-2 composites
+python3 python/extract_patches.py
 
-## Key Literature
+# Label patches interactively
+jupyter notebook notebooks/label_patches.ipynb
+```
 
-- Hansen, M. C. et al. (2013). "High-Resolution Global Maps of 21st-Century Forest Cover Change"
-- Tracking Tasmania's threatened forests (Bob Brown Foundation reports)
-- Sentinel-2 for forest monitoring (ESA documentation)
-- Deep learning for deforestation detection (recent ML papers)
+### Phase 3: CNN Training
+```bash
+python3 python/train_cnn.py
+# Outputs: models/clearcut_classifier_final.keras, training curves, metrics
+```
 
-## Timeline
+### Phase 4: Inference and Analysis
+```bash
+# Run inference on all patches + cross-reference with land tenure
+python3 python/run_inference.py
 
-**Month 5 (March-April):**
-- Phase 1-2: Data collection + training data creation
-- Phase 3: Model development
+# Generate visualisations
+python3 python/create_visualisations.py
 
-**Month 6 (April-May):**
-- Phase 4-5: Inference + validation
-- Phase 6: Outputs + portfolio write-up
+# (Optional) Validate predictions interactively
+python3 python/validate_predictions.py
+```
 
-## Ethical Considerations
+### Phase 5: Interactive Map
+```bash
+python3 python/create_map.py
+# Output: outputs/maps/tasmania_deforestation_map.html
+```
 
-This project aims to support environmental protection and law enforcement. Findings may be:
-- Shared with relevant authorities and NGOs
-- Presented as "suspected" illegal clearing (requires ground verification)
-- Used to demonstrate technical capability, not to accuse specific entities
+---
+
+## Model Performance
+
+**Test Set (n=40, 4 clearcut samples):**
+- Precision: 100% (4/4 clearcut predictions correct)
+- Recall: 100% (4/4 clearcut samples detected)
+- F1-score: 100%
+
+**Manual Validation (n=12 high-confidence clearcut predictions):**
+- Precision: 83% (10/12 correct)
+- 2 false positives (fire/natural loss misclassified as clearcut)
+
+**Note:** Test set size is small (4 clearcut samples). Manual validation on unseen data provides more robust performance estimate.
+
+---
+
+## Limitations
+
+1. **Study region scope:** Central Tasmania only (145.5–146.5°E, -43.2 to -42.2°S). Findings may not generalise to western or northern Tasmania.
+
+2. **Small training set:** 263 labelled patches (24 clearcut, 239 not-clearcut). Model performance could improve with additional labelled data.
+
+3. **Binary classification:** Does not distinguish clearcut types (salvage logging, plantation harvest, native forest clearfelling).
+
+4. **Fire/clearcut ambiguity:** Model occasionally confuses fire boundaries with clearcut edges (2 false positives in validation sample).
+
+5. **Temporal resolution:** Annual composites (2019–2024) miss intra-annual dynamics. Some clearcuts may occur between composite dates.
+
+---
+
+## Future Work
+
+- **Expand study region:** Apply model to all Tasmania (4,051 Hansen loss points)
+- **Multi-class classification:** Distinguish clearcut subtypes (salvage, plantation, native)
+- **Temporal analysis:** Track individual sites across multiple years to detect regeneration
+- **Ground-truthing:** Field validation of flagged clearcuts in protected areas
+- **Real-time monitoring:** Automate monthly inference on new Sentinel-2 imagery
+
+---
+
+## Citation
+
+If using this work, please cite:
+Crompton, D. (2026). Tasmania Deforestation Detection: CNN-based classification
+of forest loss from Sentinel-2 imagery. GitHub repository.
+https://github.com/dtcrompton/tasmania-deforestation-detection
+
+---
 
 ## License
 
-MIT License
+MIT License — see [LICENSE](LICENSE) for details.
+
+Data sources retain their original licenses:
+- Sentinel-2: ESA Copernicus (free and open access)
+- Hansen GFC: CC BY 4.0
+- Tasmania LIST: Creative Commons Attribution 4.0 International
+
+---
 
 ## Contact
 
-Daniel Crompton | [LinkedIn](https://www.linkedin.com/in/dtcrompton/) | [Portfolio](https://dtcrompton.github.io)
+**Daniel Crompton**  
+Portfolio: [dtcrompton.github.io](https://dtcrompton.github.io)  
+LinkedIn: [linkedin.com/in/dtcrompton](https://linkedin.com/in/dtcrompton/)  
+GitHub: [@dtcrompton](https://github.com/dtcrompton)
