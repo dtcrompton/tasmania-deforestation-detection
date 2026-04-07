@@ -59,7 +59,7 @@ Loss detection: Hansen Global Forest Change v1.12
 ---
 
 ## Repository Structure
-
+```
 tasmania-deforestation-detection/
 ├── data/
 │   ├── raw/                              # Sentinel-2 GeoTIFFs (gitignored, ~18GB)
@@ -101,6 +101,7 @@ tasmania-deforestation-detection/
 ├── extract_patches.py                # Phase 2: Patch extraction
 ├── filter_loss_points.py             # Phase 1: Hansen point filtering
 └── download_boundaries.py            # Phase 1: PTPZ/reserve download
+```
 
 ---
 
@@ -228,9 +229,11 @@ python3 python/create_map.py
 ## Citation
 
 If using this work, please cite:
+```
 Crompton, D. (2026). Tasmania Deforestation Detection: CNN-based classification
 of forest loss from Sentinel-2 imagery. GitHub repository.
 https://github.com/dtcrompton/tasmania-deforestation-detection
+```
 
 ---
 
