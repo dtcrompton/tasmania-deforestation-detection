@@ -30,8 +30,14 @@ def create_base_map(center = [-42.7, 146.0], zoom = 9):
     m = folium.Map(
         location = center,
         zoom_start = zoom,
-        tiles = "CartoDB positron"
+        tiles = None
     )
+
+    folium.TileLayer(
+        tiles="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_3v0u_1_4c9d5c04c3cacfcff5b8cd1e",
+        attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        name="CARTO Light"
+    ).add_to(m)
     
     return m
 

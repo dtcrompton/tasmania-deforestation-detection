@@ -1,0 +1,10 @@
+VALIDATION METRICS
+======================================================================
+
+Total patches reviewed: 12
+Correct predictions: 10 (83.3%)
+Incorrect predictions: 2
+
+Clearcut predictions reviewed: 12
+Clearcut correct: 10
+Clearcut precision: 83.3%

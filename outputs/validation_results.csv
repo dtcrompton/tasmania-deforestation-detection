@@ -1,0 +1,16 @@
+patch_id,year,predicted_class,predicted_prob,user_label
+4422,2024,clearcut,0.999927,correct
+4684,2024,clearcut,0.99967086,correct
+4844,2024,clearcut,0.9993864,skip
+4261,2024,clearcut,0.99771297,correct
+4622,2024,clearcut,0.9955058,correct
+2295,2021,clearcut,0.99221516,skip
+4899,2024,clearcut,0.9921589,incorrect
+4667,2024,clearcut,0.99191797,correct
+2344,2021,clearcut,0.9767048,correct
+4145,2023,clearcut,0.97569317,correct
+4975,2024,clearcut,0.95898515,incorrect
+4704,2024,clearcut,0.9569983,skip
+4790,2024,clearcut,0.95347744,correct
+1833,2021,clearcut,0.9407135,correct
+3500,2024,clearcut,0.9250883,correct
